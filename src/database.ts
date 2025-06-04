@@ -2,19 +2,20 @@ import * as SQLite from "expo-sqlite"
 import type { ScannedCode } from "./models"
 
 export async function connectDb() {
-  return new Database(await SQLite.openDatabaseAsync("ScanQR"))
+  const db = new Database(await SQLite.openDatabaseAsync("ScanQR"))
+  await db.init()
+  return db
 }
 
 export class Database {
-  constructor(private db: SQLite.SQLiteDatabase) {
-    this.init()
+  constructor(private db: SQLite.SQLiteDatabase) {}
+
+  async close() {
+    await this.db.closeAsync()
   }
 
-  close() {
-    this.db.closeAsync()
-  }
-
-  private async init() {
+  // Inicialización explícita
+  async init() {
     // Crear tabla inicial si no existe
     await this.db.execAsync(
       `CREATE TABLE IF NOT EXISTS codigos (
@@ -40,6 +41,8 @@ export class Database {
       console.error("Error en migración:", error)
       // Si hay error, podemos recrear la tabla
       await this.recreateTable()
+      // Opcional: lanzar el error si quieres que el usuario lo maneje
+      // throw error
     }
   }
 
@@ -67,7 +70,7 @@ export class Database {
       )
 
       // Restaurar datos existentes con timestamp actual
-      for (const row of existingData as Array<{ id: string; data: string; type: string }>) {
+      for (const row of existingData) {
         await this.db.runAsync(
           "INSERT INTO codigos (id, data, type, timestamp) VALUES (?, ?, ?, ?)",
           row.id,
@@ -80,6 +83,8 @@ export class Database {
       console.log("Tabla recreada exitosamente")
     } catch (error) {
       console.error("Error recreando tabla:", error)
+      // Opcional: lanzar el error si quieres que el usuario lo maneje
+      // throw error
     }
   }
 

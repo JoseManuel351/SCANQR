@@ -1,61 +1,46 @@
 import { ScannedCode } from "./models";
-import axios from 'axios'; 
+import axios from 'axios';
 
-const hostApi = 'http://localhost:3000/codigos';
+const hostApi = 'http://localhost:3000';
 
-export async function getAll(): Promise<ScannedCode[]>
-{
-    try{
-        const response = await fetch(`${hostApi}/codigos`);
-        const data = await response.json(); 
-        return data as ScannedCode[]; 
-    } catch(error){
+export async function getAll(): Promise<ScannedCode[]> {
+    try {
+        const response = await axios.get(`${hostApi}/codigos`);
+        return response.data as ScannedCode[];
+    } catch (error) {
         console.error('Error retrieving resource', error);
-        return []; 
+        return [];
     }
 }
 
-export async function getbyId(id:string): Promise<ScannedCode|null>
-{
-    try{
-       const response = await axios.get(`${hostApi}/codigos/${id}`);
-       if(response.status >= 400) {
-            console.error(response.data);
-            return null; 
-       }
-       return response.data as ScannedCode; 
-    } catch (error){
+export async function getById(id: string): Promise<ScannedCode | null> {
+    try {
+        const response = await axios.get(`${hostApi}/codigos/${id}`);
+        return response.data as ScannedCode;
+    } catch (error) {
         console.error('Error retrieving resource', error);
-        return null; 
+        return null;
     }
 }
- 
-export async function create(code:ScannedCode) 
-{
+
+export async function create(code: ScannedCode): Promise<ScannedCode | null> {
     try {
         const response = await axios.post(`${hostApi}/codigos`, code, {
             headers: {
-                'Content-Type': 'application/json',
-                mode: 'cors'
+                'Content-Type': 'application/json'
             }
         });
-        console.log(response);
-        if (response.status >= 500) {
-            console.error(response.data);
-        }
+        return response.data as ScannedCode;
     } catch (error) {
         console.error('Error creating resource', error);
+        return null;
     }
 }
 
-export async function deleteById(id:string) {
+export async function deleteById(id: string): Promise<boolean> {
     try {
-       const response = await axios.delete(`${hostApi}/codigos/${id}`);
-       if (response.status >= 400) {
-           console.error(response.data);
-           return false;
-       }
-       return true;
+        await axios.delete(`${hostApi}/codigos/${id}`);
+        return true;
     } catch (error) {
         console.error('Error deleting resource', error);
         return false;
